@@ -1,32 +1,17 @@
 defmodule Goldcrest.HTTPServer do
-  @moduledoc """
-  Starts a HTTP server on the given port
-  This server also logs all requests
-  """
   require Logger
-
-  def child_spec(init_args) do
-    %{
-      id: __MODULE__,
-      start: {
-        Task,
-        :start_link,
-        [fn -> apply(__MODULE__, :start, init_args) end]
-      }
-    }
-  end
 
   @server_options [
     active: false,
     packet: :http_bin,
     reuseaddr: true
   ]
-  def start(port) do
-    ensure_configured!()
 
+  def start(port) do
     case :gen_tcp.listen(port, @server_options) do
       {:ok, sock} ->
         Logger.info("Started a webserver on port #{port}")
+
         listen(sock)
 
       {:error, error} ->
@@ -36,35 +21,40 @@ defmodule Goldcrest.HTTPServer do
 
   def listen(sock) do
     {:ok, req} = :gen_tcp.accept(sock)
+    recv_resp = :gen_tcp.recv(req, 0)
 
-    {
-      :ok,
-      {_http_req, method, {_type, path}, _v}
-    } = :gen_tcp.recv(req, 0)
+    {:ok, {_http_req, method, {_type, path}, _v}} = recv_resp
 
     Logger.info("Received HTTP request #{method} at #{path}")
 
-    spawn(__MODULE__, :respond, [req, method, path])
+    dispatch(req, method, path)
 
     listen(sock)
   end
 
-  def respond(req, method, path) do
-    %Goldcrest.HTTPResponse{} = resp = responder().resp(req, method, path)
-    resp_string = Goldcrest.HTTPResponse.to_string(resp)
-    :gen_tcp.send(req, resp_string)
-    Logger.info("Response sent: \n#{resp_string}")
-    :gen_tcp.close(req)
-  end
+  defp dispatch(req, method, path) do
+    case dispatcher() do
+      {mod, opts} ->
+        mod.init(req, method, path, opts)
 
-  defp ensure_configured! do
-    case responder() do
-      nil -> raise "No `responder` configured for `goldcrest_http_server`"
-      _responder -> :ok
+      mod ->
+        mod.init(req, method, path, [])
     end
   end
 
-  defp responder do
-    Application.get_env(:goldcrest_http_server, :responder)
+  defp dispatcher do
+    Application.get_env(:goldcrest_http_server, :dispatcher)
+  end
+
+  def respond(req, _method, _path) do
+    # This part is different for different applications
+
+    resp_string = "Hello World"
+
+    :gen_tcp.send(req, resp_string)
+
+    Logger.info("Response sent: \n#{resp_string}")
+
+    :gen_tcp.close(req)
   end
 end
