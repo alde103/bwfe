@@ -1,5 +1,11 @@
 defmodule Goldcrest.ExampleRouter do
   use Plug.Router
+
+  plug(Plug.Parsers,
+    parsers: [:urlencoded, :json],
+    json_decoder: Jason
+  )
+
   plug(:match)
   plug(:dispatch)
 
