@@ -40,4 +40,9 @@ defmodule ExampleServerHtmlEex.Controller do
       file
     ])
   end
+
+  # Update render to call `Goldcrest.View` here
+  defp render(conn, file, assigns) do
+    ExampleServerHtmlEex.View.render(conn, file, assigns)
+  end
 end
