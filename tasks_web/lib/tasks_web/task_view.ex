@@ -1,5 +1,7 @@
 defmodule TasksWeb.TaskView do
-  def render(conn, file, assigns) do
-    Goldcrest.View.render(__MODULE__, conn, file, assigns)
+  use Goldcrest.View
+
+  def stringify_task(_task = {name, description}) do
+    "<td>#{name}</td> <td>#{description}</td>"
   end
 end

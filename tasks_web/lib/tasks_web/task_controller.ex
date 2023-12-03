@@ -1,13 +1,7 @@
 defmodule TasksWeb.TaskController do
-  use Plug.Builder
-  import Plug.Conn
-  alias TasksWeb.Tasks
-  # Taken from other examples
-  def call(conn, action: action) do
-    conn = super(conn, [])
+  use Goldcrest.Controller
 
-    apply(__MODULE__, action, [conn, conn.params])
-  end
+  alias TasksWeb.Tasks
 
   def index(conn, _params) do
     tasks = Tasks.list()
@@ -21,7 +15,7 @@ defmodule TasksWeb.TaskController do
     Tasks.add(name, description)
 
     conn
-    |> Goldcrest.Controller.redirect(to: "/tasks")
+    |> redirect(to: "/tasks")
   end
 
   def delete(conn, %{"id" => id}) do
@@ -30,11 +24,6 @@ defmodule TasksWeb.TaskController do
     |> Tasks.delete()
 
     conn
-    |> Goldcrest.Controller.redirect(to: "/tasks")
-  end
-
-  # Taken from other examples
-  defp render(conn, file, assigns) do
-    TasksWeb.TaskView.render(conn, file, assigns)
+    |> redirect(to: "/tasks")
   end
 end

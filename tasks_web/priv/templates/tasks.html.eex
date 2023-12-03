@@ -10,11 +10,10 @@
     </tr>
   </thead>
   <tbody>
-  <%= for {{name, description}, index} <- Enum.with_index(@tasks) do %>
+  <%= for {task, index} <- Enum.with_index(@tasks) do %>
     <tr>
       <td><%= Kernel.+(index, 1) %></td>
-      <td><%= name %></td>
-      <td><%= description %></td>
+      <%= stringify_task(task) %>
       <td>
         <a href="/tasks/<%= index %>/delete">Delete</a>
       </td>
